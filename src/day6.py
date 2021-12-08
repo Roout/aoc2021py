@@ -32,7 +32,7 @@ def part_2(count_by_timer):
 
 # count of fish with the given timer
 count_by_timer = [0 for x in range(9)]
-with open('input/day6.txt', 'r') as istream:
+with open('../input/day6.txt', 'r') as istream:
     timers = [int(n) for n in istream.readline().rstrip('\n').split(',')]
     for timer in timers:
         count_by_timer[timer] += 1

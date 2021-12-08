@@ -77,7 +77,7 @@ def part_2(segments):
     return count
 
 segments = []
-with open('input/day5.txt', 'r') as istream:
+with open('../input/day5.txt', 'r') as istream:
     for line in istream:
         line = line.rstrip('\n')
         # 5,5 -> 8,2

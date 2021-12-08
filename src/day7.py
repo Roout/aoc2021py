@@ -21,7 +21,7 @@ def part_2(values):
     return accumulate(values, arithmetic_sum)
 
 values = []
-with open('input/day7.txt', 'r') as istream:
+with open('../input/day7.txt', 'r') as istream:
     values = [ int(n) for n in istream.readline().split(',') ]
 
 print("Part_1: ", part_1(values))

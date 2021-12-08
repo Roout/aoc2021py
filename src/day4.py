@@ -65,7 +65,7 @@ def part_2(values, matricies):
     return None
 
 values = []
-with open('input/day4.txt', 'r') as istream:
+with open('../input/day4.txt', 'r') as istream:
     values = [ int(x) for x in istream.readline().split(',')]
     # skip line
     istream.readline()

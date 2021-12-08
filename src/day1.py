@@ -1,6 +1,6 @@
 
 ans = 0
-with open('input/day1.txt', 'r') as istream:
+with open('../input/day1.txt', 'r') as istream:
     prev = None
     days = [None] * 3
     for line in istream:

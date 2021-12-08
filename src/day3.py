@@ -17,7 +17,7 @@ def filter_by(values: list, cmp):
 # CO2 scrubber rating.
 values = list()
 
-with open('input/day3.txt', 'r') as istream:
+with open('../input/day3.txt', 'r') as istream:
     for line in istream:
         values.append(line.removesuffix('\n'))
 

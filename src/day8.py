@@ -29,7 +29,7 @@ class Part_2:
 
 part_1 = Part_1()
 part_2 = Part_2()
-with open('input/day8.txt') as istream:
+with open('../input/day8.txt') as istream:
     for line in istream:
         splitted = line.split('|')
         part_1.parse_line(splitted[1])
