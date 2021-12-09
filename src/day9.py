@@ -25,6 +25,7 @@ def apply_to_lowest(map, init, fn: Callable):
                     break
             if is_lowest:
                 init += fn(x = j, y = i)
+    return init
 
 def Bfs(map, start:tuple):
     WALL = 9
@@ -49,13 +50,10 @@ def Bfs(map, start:tuple):
     return basin_size                
 
 def part_1(map):
-    s = 0
-    apply_to_lowest(map, s, lambda x, y: map[y][x] + 1)
-    return s
+    return apply_to_lowest(map, 0, lambda x, y: map[y][x] + 1)
 
 def part_2(map):
-    basin_sizes = []
-    apply_to_lowest(map, basin_sizes, lambda x, y, map = map: [Bfs(map, start = (x, y))])
+    basin_sizes = apply_to_lowest(map, [], lambda x, y, map = map: [Bfs(map, start = (x, y))])
     basin_sizes.sort(reverse = True)
     return basin_sizes[0] * basin_sizes[1] * basin_sizes[2]
 
