@@ -1,4 +1,7 @@
 
+from typing import Callable
+
+
 dx = [-1, 1, 0,  0]
 dy = [ 0, 0, 1, -1]
 
@@ -8,8 +11,7 @@ def in_bounds(map, x, y):
     width = len(map[0])
     return 0 <= x < width and 0 <= y < height
 
-def part_1(map):
-    s = 0
+def apply_to_lowest(map, init, fn: Callable):
     width = len(map[0])
     height = len(map)
     for i in range(height):
@@ -22,8 +24,7 @@ def part_1(map):
                     is_lowest = False
                     break
             if is_lowest:
-                s += map[i][j] + 1
-    return s
+                init += fn(x = j, y = i)
 
 def Bfs(map, start:tuple):
     WALL = 9
@@ -47,23 +48,14 @@ def Bfs(map, start:tuple):
                     used[next_y][next_x] = True
     return basin_size                
 
+def part_1(map):
+    s = 0
+    apply_to_lowest(map, s, lambda x, y: map[y][x] + 1)
+    return s
+
 def part_2(map):
     basin_sizes = []
-    # solve
-    width = len(map[0])
-    height = len(map)
-    for i in range(height):
-        for j in range(width):
-            is_lowest = True
-            for k in range(4):
-                x = dx[k] + j
-                y = dy[k] + i
-                if in_bounds(map, x, y) and map[i][j] >= map[y][x]:
-                    is_lowest = False
-                    break
-            if is_lowest:
-                basin_sizes.append(Bfs(map, start = (j, i)))
-
+    apply_to_lowest(map, basin_sizes, lambda x, y, map = map: [Bfs(map, start = (x, y))])
     basin_sizes.sort(reverse = True)
     return basin_sizes[0] * basin_sizes[1] * basin_sizes[2]
 
