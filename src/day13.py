@@ -26,7 +26,9 @@ def fold_page(page_size: list, points: set, fold: tuple):
     
     if fold[0] == 'x':
         x = fold[1] + 1
+        page_size[0] = fold[1]
     else:
+        page_size[1] = fold[1]
         y = fold[1] + 1
     
     transformed = set()
@@ -40,11 +42,9 @@ def fold_page(page_size: list, points: set, fold: tuple):
                 # 0 1 [2] 3 4 
                 pt = (fold[1] - (next_x - fold[1]), next_y)
                 transformed.add(pt)
-                page_size[0] = fold[1]
             else:
                 pt = (next_x, fold[1] - (next_y - fold[1]))
                 transformed.add(pt)
-                page_size[1] = fold[1]
         else:
             transformed.add((next_x, next_y))
     return transformed
