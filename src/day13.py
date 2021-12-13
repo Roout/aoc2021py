@@ -11,7 +11,7 @@ class Rect:
 
 def dump_2d(arr2d:list):
     for row in arr2d:
-        print(row.join())
+        print(''.join(row))
     return
 
 page_size = [0, 0]
@@ -38,19 +38,30 @@ def fold_page(page_size: list, points: set, fold: tuple):
                 # x = 2; w = 5
                 # (4, 0)
                 # 0 1 [2] 3 4 
-                transformed.add((fold[1] - (next_x - fold[1]), next_y))
+                pt = (fold[1] - (next_x - fold[1]), next_y)
+                transformed.add(pt)
                 page_size[0] = fold[1]
             else:
-                transformed.add((next_x, fold[1] - (next_y - fold[1])))
+                pt = (next_x, fold[1] - (next_y - fold[1]))
+                transformed.add(pt)
                 page_size[1] = fold[1]
         else:
             transformed.add((next_x, next_y))
     return transformed
 
-def part_1(page_size: list, points: set):
+def part_1(page_size: list, points: set, fold_queue: list):
     front_fold = fold_queue.pop(0)
     points = fold_page(page_size, points, front_fold)
     return len(points)
+
+def part_2(page_size: list, points: set, fold_queue: list):
+    for front_fold in fold_queue:
+        points = fold_page(page_size, points, front_fold)
+    page = [['.'] * page_size[0] for x in range(page_size[1])]
+    for x, y in points:
+        page[y][x] = '#'
+    dump_2d(page)
+    
 
 with open('../input/day13.txt') as istream:
     for line in istream:
@@ -67,4 +78,5 @@ with open('../input/day13.txt') as istream:
             if page_size[0] < x + 1: page_size[0] = x + 1
             if page_size[1] < y + 1: page_size[1] = y + 1
 
-print("Part_1: ", part_1(page_size, points.copy()))
+print("Part_1: ", part_1(page_size.copy(), points.copy(), fold_queue.copy()))
+print("Part_2: ", part_2(page_size, points, fold_queue))
