@@ -5,7 +5,7 @@ def assign_or_modify(d: dict, key, value):
     else:
         d[key] += value
 
-def part_1(template: str, rules: dict):
+def simulate(template: str, rules: dict, steps: int):
     counter = {}
     # init starting state
     state = {}
@@ -14,7 +14,6 @@ def part_1(template: str, rules: dict):
         assign_or_modify(state, template[i - 1: i + 1], 1)
         assign_or_modify(counter, template[i], 1)
     # simulate
-    steps = 10
     for i in range(steps):
         # { polimer: count }
         added_polimers = {}
@@ -34,12 +33,18 @@ def part_1(template: str, rules: dict):
             assign_or_modify(state, polimer, count)
         added_polimers.clear()
     
-    min = 1 << 64
+    min = 1 << 128
     max = 0
     for v in counter.values():
         if v < min: min = v
         if v > max: max = v
     return max - min
+
+def part_1(template: str, rules: dict):
+    return simulate(template, rules, 10)
+
+def part_2(template: str, rules: dict):
+    return simulate(template, rules, 40)
 
 template = str()
 rules = {}
@@ -51,4 +56,6 @@ with open('../input/day14.txt') as istream:
         key, val = line.rstrip('\n').split(' -> ')
         assert(key not in rules)
         rules[key] = val
+
 print('Part_1: ', part_1(template, rules))
+print('Part_2: ', part_2(template, rules))
