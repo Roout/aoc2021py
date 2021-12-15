@@ -4,8 +4,8 @@ days=($(ls "src/"))
 let last=0
 for i in "${days[@]}"
 do
-    num=$(echo "$i" | sed 's/[^0-9]/''/g')
-    if (($num > $last)); then
+    num=$(echo "$i" | sed 's/[^0-9]//g')
+    if (( num > last )); then
         last=$num
     fi
 done 
