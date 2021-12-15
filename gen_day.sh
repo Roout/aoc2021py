@@ -1,4 +1,5 @@
 #!/bin/bash
+
 days=($(ls "src/"))
 let last=0
 for i in "${days[@]}"
@@ -9,10 +10,10 @@ do
     fi
 done 
 
-echo "The last day was $last"
-
 next_day=$((last + 1))
-echo "Create files for the day $next_day" 
 
-echo > "src/day$next_day.py"
-echo > "input/day$next_day.txt"
+echo " - create src/day$next_day.py"
+sed "s/{placeholder}/day$next_day.txt/g" "template.txt" > "src/day$next_day.py"
+
+echo " - create input/day$next_day.txt"
+touch "input/day$next_day.txt"

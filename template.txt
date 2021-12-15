@@ -1,0 +1,16 @@
+import time
+
+def part_1():
+    pass
+
+def part_2():
+    pass
+
+with open("../input/{placeholder}") as istream:
+    for line in istream:
+        pass
+    
+begin = time.time()
+print('Part_1: {}, takes {}s'.format(part_1(), time.time() - begin))
+begin = time.time()
+print('Part_2: {}, takes {}s'.format(part_2(), time.time() - begin))
