@@ -1,6 +1,6 @@
 from heapq import *
 from dataclasses import dataclass, field
-from typing import Any
+import time
 
 class Pt:
     def __init__(self, x: int, y: int) -> None:
@@ -17,11 +17,6 @@ class Pt:
 class Move:
     priority: int
     item: Pt = field(compare=False)
-
-    def __init__(self, prior: int, pos: Pt) -> None:
-        self.priority = prior
-        self.item = pos
-        
 
 def add(lhs: Pt, rhs: Pt):
     return Pt(lhs.x + rhs.x, lhs.y + rhs.y)
@@ -61,11 +56,28 @@ def dijkstra(map: list, start: Pt, finish:Pt):
     return None
 
 def part_1(map: list):
-    return dijkstra(map, Pt(0,0), Pt(len(map[0]) - 1, len(map) - 1))
+    return dijkstra(map, Pt(0, 0), Pt(len(map[0]) - 1, len(map) - 1))
+
+def part_2(map: list):
+    h = len(map)
+    enlarged_map = [[] for r in range(5 * h)]
+
+    for i in range(h):
+        for j in range(5):
+            enlarged_map[i] += [(val + j - 1) % 9 + 1 for val in map[i]]
+    
+    for i in range(1, 5):
+        for j in range(h):
+            enlarged_map[i * h + j] = [(val + i - 1) % 9 + 1 for val in enlarged_map[j]]
+
+    return dijkstra(enlarged_map, Pt(0, 0), Pt(len(enlarged_map[0]) - 1, len(enlarged_map) - 1))
 
 map = []
 with open('../input/day15.txt') as istream:
     for line in istream:
         map += [[int(x) for x in line.rstrip('\n')]]
 
-print('Part_1: ', part_1(map))
+begin = time.time()
+print('Part_1: {}, takes {}s'.format(part_1(map), time.time() - begin))
+begin = time.time()
+print('Part_2: {}, takes {}s'.format(part_2(map), time.time() - begin))
