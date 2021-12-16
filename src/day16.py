@@ -27,7 +27,7 @@ def handle_literal(generator: Extractor):
         init += group[1:]
     return init
 
-def handle_packet(generator: Extractor):
+def calc_packet_version(generator: Extractor):
     LITERAL = 4
 
     packet_version = int(generator.next(3), 2)
@@ -35,6 +35,7 @@ def handle_packet(generator: Extractor):
 
     sum = packet_version
     if packet_type_id == LITERAL:
+        # just consume string
         handle_literal(generator)
     else:
         length_type_id = int(generator.next(1))
@@ -42,15 +43,14 @@ def handle_packet(generator: Extractor):
             # number of subpackets
             subpacket_count = int(generator.next(11), 2)
             while subpacket_count > 0:
-                sum += handle_packet(generator)
+                sum += calc_packet_version(generator)
                 subpacket_count -= 1
         else:
             # number of bits contains in all subpackets
-            subbin = generator.next(15)
-            total_length = int(subbin, 2)
+            total_length = int(generator.next(15), 2)
             while total_length > 0:
                 start = generator.start
-                sum += handle_packet(generator)
+                sum += calc_packet_version(generator)
                 total_length -= generator.start - start
     return sum
 
@@ -86,8 +86,7 @@ def calc_packet_value(generator: Extractor):
                 subpacket_count -= 1
         else:
             # number of bits contains in all subpackets
-            subbin = generator.next(15)
-            total_length = int(subbin, 2)
+            total_length = int(generator.next(15), 2)
             # init result
             start = generator.start
             result = calc_packet_value(generator)
@@ -99,7 +98,7 @@ def calc_packet_value(generator: Extractor):
     return result
 
 def part_1(generator: Extractor):
-    return handle_packet(generator)
+    return calc_packet_version(generator)
 
 def part_2(generator: Extractor):
     return calc_packet_value(generator)
