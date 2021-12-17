@@ -49,7 +49,7 @@ def part_1(target: Rect):
     limiter_x = target.x + target.width
     limiter_y = target.y - 1
 
-    for y in reversed(range(0, -limiter_y)):
+    for y in reversed(range(0, -2 * limiter_y)):
         for x in range(1, limiter_x):
             mx = 0
             gen = simulator(Vec2(0, 0), Vec2(x, y))
@@ -64,7 +64,27 @@ def part_1(target: Rect):
     return None
 
 def part_2(target: Rect):
-    pass
+    limiter_x = target.x + target.width
+    limiter_y = target.y - 1
+
+    velocities = 0
+    # choose range taking into account negative values too
+    # because this time we are interesting in not the best but any velocity
+    for y in reversed(range(limiter_y, -2 * limiter_y)):
+        for x in range(1, limiter_x):
+            is_valid = False
+            gen = simulator(Vec2(0, 0), Vec2(x, y))
+            for i__ in range(800):
+                pos = next(gen)
+                if pos.x >= limiter_x or pos.y <= limiter_y:
+                    # won't reach the target area for sure
+                    break
+                if target.contains(pos.x, pos.y):
+                    is_valid = True
+                    break
+            velocities += int(is_valid)
+                    
+    return velocities
 
 target = None
 with open("../input/day17.txt") as istream:
