@@ -1,5 +1,4 @@
 import time
-from typing import Callable
 
 class Node:
     value: int
@@ -153,14 +152,6 @@ def merge(lhs:Node, rhs:Node):
         reduces = ops 
     return root   
 
-def traverse(root: Node, fn: Callable):
-    if root.is_leaf() or root.is_pair():
-        return fn(root)
-    sum = 0
-    for child in root.children:
-        sum += traverse(child, fn)
-    return sum
-
 def magnitude(node: Node):
     if node.is_leaf():
         return node.value
@@ -173,11 +164,28 @@ def part_1(snailfishes: list):
     for snail in snailfishes[1:]:
         rhs = build_tree(snail, 1)
         root = merge(root, rhs)
-    # print(stringify_tree(root))
     return magnitude(root)
 
 def part_2(snailfishes: list):
-    pass
+    count = len(snailfishes)
+    highest_sum = 0
+    for i in range(count):
+        for j in range(i + 1, count):
+            # a + b
+            lhs = build_tree(snailfishes[i], 1)
+            rhs = build_tree(snailfishes[j], 1)
+            root = merge(lhs, rhs)
+            mag = magnitude(root)
+            if mag > highest_sum:
+                highest_sum = mag
+            # b + a    
+            lhs = build_tree(snailfishes[j], 1)
+            rhs = build_tree(snailfishes[i], 1)
+            root = merge(lhs, rhs)
+            mag = magnitude(root)
+            if mag > highest_sum:
+                highest_sum = mag
+    return highest_sum
 
 snailfishes = []
 with open("../input/day18.txt") as istream:
