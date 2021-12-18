@@ -19,10 +19,13 @@ class Node:
     def __repr__(self) -> str:
         return self.__str__
 
-    def add_child(self, child: object):
+    def add_child(self, value = None):
+        child = Node()
         child.parent = self
+        child.value = value
         child.index = len(self.children)
         self.children += [child]
+        return child
     
     def is_leaf(self):
         return self.value != None
@@ -69,8 +72,7 @@ def build_tree(line: str, pos: int):
     cur = root
     while pos < len(line):
         if line[pos] == '[':
-            child = Node()
-            cur.add_child(child)
+            child = cur.add_child()
             assert child.parent == cur
             cur = child
         elif line[pos] == ']':
@@ -80,8 +82,7 @@ def build_tree(line: str, pos: int):
             begin = pos
             while line[pos].isdigit():
                 pos += 1
-            child = Node(int(line[begin: pos]), cur)
-            cur.add_child(child)
+            cur.add_child(int(line[begin: pos]))
             pos -= 1
         pos += 1
     return root
@@ -100,6 +101,17 @@ def explode(root: Node, depth: int):
         return True
     for child in root.children:
         if explode(child, depth + 1):
+            return True
+    return False
+
+def split(root: Node):
+    if root.is_leaf() and root.value > 9:
+        root.add_child(root.value >> 1)
+        root.add_child((root.value >> 1) + (root.value % 2))
+        root.value = None
+        return True
+    for child in root.children:
+        if split(child):
             return True
     return False
 
@@ -143,11 +155,17 @@ def part_2():
 with open("../input/day18.txt") as istream:
     root = build_tree(istream.readline().rstrip()[1:-1], 0)
     print(stringify_tree(root))
-    iters = 0
-    while explode(root, 1):
-        iters += 1
-        print(stringify_tree(root))
-    print("Explode {} times".format(iters))
+    explode(root, 1)
+    print(stringify_tree(root))
+    explode(root, 1)
+    print(stringify_tree(root))
+    split(root)
+    print(stringify_tree(root))
+    split(root)
+    print(stringify_tree(root))
+    explode(root, 1)
+    print(stringify_tree(root))
+    
     
 begin = time.time()
 print('Part_1: {}, takes {}s'.format(part_1(), time.time() - begin))
