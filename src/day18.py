@@ -1,4 +1,5 @@
 import time
+from typing import Callable
 
 class Node:
     value: int
@@ -88,8 +89,7 @@ def build_tree(line: str, pos: int):
     return root
 
 def explode(root: Node, depth: int):
-    if root.is_pair() and depth >= 4:
-        print('Explode: {{ {}, {} }}'.format(root.children[0].value, root.children[1].value))
+    if root.is_pair() and depth > 4:
         left_child = left_neighbour(root)
         right_child = right_neighbour(root)
         if left_child != None:
@@ -137,37 +137,53 @@ def stringify_tree(root: Node):
 
 def merge(lhs:Node, rhs:Node):
     root = Node()
-    root.add_child(lhs)
-    root.add_child(rhs)
-    iters = 0
-    while explode(root, 1):
-        iters += 1
-    print("Explode {} times".format(iters))
-    # todo: not implemented
+    lhs.index = 0
+    rhs.index = 1
+    lhs.parent = root
+    rhs.parent = root
+    root.children = [lhs, rhs]
 
-def part_1():
+    reduces = None
+    while reduces == None or reduces != 0:
+        ops = 0
+        while explode(root, 1):
+            ops += 1
+        if split(root):
+            ops += 1
+        reduces = ops 
+    return root   
 
+def traverse(root: Node, fn: Callable):
+    if root.is_leaf() or root.is_pair():
+        return fn(root)
+    sum = 0
+    for child in root.children:
+        sum += traverse(child, fn)
+    return sum
+
+def magnitude(node: Node):
+    if node.is_leaf():
+        return node.value
+    if node.is_pair():
+        return 3 * node.children[0].value + 2 * node.children[1].value
+    return 3 * magnitude(node.children[0]) + 2 * magnitude(node.children[1])
+
+def part_1(snailfishes: list):
+    root = build_tree(snailfishes[0], 1)
+    for snail in snailfishes[1:]:
+        rhs = build_tree(snail, 1)
+        root = merge(root, rhs)
+    # print(stringify_tree(root))
+    return magnitude(root)
+
+def part_2(snailfishes: list):
     pass
 
-def part_2():
-    pass
-
+snailfishes = []
 with open("../input/day18.txt") as istream:
-    root = build_tree(istream.readline().rstrip()[1:-1], 0)
-    print(stringify_tree(root))
-    explode(root, 1)
-    print(stringify_tree(root))
-    explode(root, 1)
-    print(stringify_tree(root))
-    split(root)
-    print(stringify_tree(root))
-    split(root)
-    print(stringify_tree(root))
-    explode(root, 1)
-    print(stringify_tree(root))
-    
+    snailfishes = [line.rstrip() for line in istream]
     
 begin = time.time()
-print('Part_1: {}, takes {}s'.format(part_1(), time.time() - begin))
+print('Part_1: {}, takes {}s'.format(part_1(snailfishes), time.time() - begin))
 begin = time.time()
-print('Part_2: {}, takes {}s'.format(part_2(), time.time() - begin))
+print('Part_2: {}, takes {}s'.format(part_2(snailfishes), time.time() - begin))
