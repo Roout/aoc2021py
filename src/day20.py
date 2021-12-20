@@ -52,6 +52,12 @@ def part_1(input: List, algo: str):
         image = encode_image(image, algo, i % 2 == 1)
     return count_lit(image)
 
+def part_2(input: List, algo: str):
+    image = input
+    for i in range(50):
+        image = encode_image(image, algo, i % 2 == 1)
+    return count_lit(image)
+
 algo = ''
 input = list([str])
 with open("../input/day20.txt") as istream:
