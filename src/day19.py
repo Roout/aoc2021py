@@ -60,6 +60,9 @@ def cross(lhs: Point, rhs: Point):
 def dot(lhs: Point, rhs: Point):
     return lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z
 
+def manh_dist(lhs: Point, rhs: Point):
+    return abs(lhs.x - rhs.x) + abs(lhs.y - rhs.y) + abs(lhs.z - rhs.z)
+
 # transform is a list/tuple of valid right-handed permutation of [1,2,3]
 # with possible different signs
 # see `generate_trans()``
@@ -128,11 +131,10 @@ def all_translations(src:Scanner, dst:Scanner):
     translations = [sub(p2, p1) for p1 in src.points for p2 in dst.points]
     return translations
 
-def part_1(scanners: List[Scanner]):
+def configure_scanners(scanners: List[Scanner]):
     REQ_BEACONS = 12
-    
     proccessed = []
-
+    transformations = generate_trans()
     scanners[0].position = Point(0, 0, 0)
     que = [scanners.pop(0)]
 
@@ -143,7 +145,6 @@ def part_1(scanners: List[Scanner]):
         for scanner in scanners:
             print('Test s{} with s{}'.format(front.index, scanner.index))
             # for each possible configuration of the `scanner``
-            transformations = generate_trans()
             for transform in transformations:
                 found = False
                 # rotate
@@ -168,10 +169,30 @@ def part_1(scanners: List[Scanner]):
         if len(scheduled_for_remove) > 0:
             # print('  scheduled_for_remove:', len(scheduled_for_remove))
             scanners[:] = (x for x in scanners if (x not in scheduled_for_remove))
-    return None
+    return proccessed
+
+def part_1(scanners: List[Scanner]):
+    proccessed = configure_scanners(scanners)
+    beacons = set()
+    points = set()
+    for scan in proccessed:
+        points.update(scan.points)
+    for scan in proccessed:
+        for point in points:
+            if scan.in_range(point):
+                beacons.add(point)
+    return len(beacons)
 
 def part_2(scanners: List[Scanner]):
-    pass
+    proccessed = configure_scanners(scanners)
+    longest = 0
+    for s1 in proccessed:
+        for s2 in proccessed:
+            if s1 == s2: continue
+            d = manh_dist(s1.position, s2.position)
+            if d > longest:
+                longest = d
+    return longest
 
 scanners: List[Scanner] = list()
 with open("../input/day19.txt") as istream:
@@ -187,6 +208,6 @@ with open("../input/day19.txt") as istream:
             scanners[-1].points += [ Point(int(x), int(y), int(z)) ]
 
 begin = time.time()
-print('Part_1: {}, takes {}s'.format(part_1([s.copy() for s in scanners]), time.time() - begin))
+# print('Part_1: {}, takes {}s'.format(part_1([s.copy() for s in scanners]), time.time() - begin))
 begin = time.time()
 print('Part_2: {}, takes {}s'.format(part_2([s.copy() for s in scanners]), time.time() - begin))
