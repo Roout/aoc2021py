@@ -17,7 +17,7 @@ class Node:
         return 'v: {}; children: {}'.format(self.value, joined)
 
     def __repr__(self) -> str:
-        return self.__str__
+        return self.__str__()
 
     def add_child(self, value = None):
         child = Node()
@@ -27,13 +27,13 @@ class Node:
         self.children += [child]
         return child
     
-    def is_leaf(self):
+    def is_value(self):
         return self.value != None
     
     def is_pair(self):
         if len(self.children) != 2:
             return False
-        if self.children[0].is_leaf() and self.children[1].is_leaf():
+        if self.children[0].is_value() and self.children[1].is_value():
             return True
         return False
 
@@ -46,7 +46,7 @@ def left_neighbour(node: Node):
     if cur.index == None:
         return None
     cur = cur.parent.children[0]
-    assert cur != None, "Congradulations! You've fucked up the logic"
+    assert cur != None, "Congratulations! You've fucked up the logic"
     # search for most right node
     while cur.value == None:
         cur = cur.children[1]
@@ -61,7 +61,7 @@ def right_neighbour(node: Node):
     if cur.index == None:
         return None
     cur = cur.parent.children[1]
-    assert cur != None, "Congradulations! You've fucked up the logic"
+    assert cur != None, "Congratulations! You've fucked up the logic"
     # search for most left node
     while cur.value == None:
         cur = cur.children[0]
@@ -104,7 +104,7 @@ def explode(root: Node, depth: int):
     return False
 
 def split(root: Node):
-    if root.is_leaf() and root.value > 9:
+    if root.is_value() and root.value > 9:
         root.add_child(root.value >> 1)
         root.add_child((root.value >> 1) + (root.value % 2))
         root.value = None
@@ -119,7 +119,7 @@ def stringify_tree(root: Node):
     if root.value == None:
         buffer += '['
     for n in root.children:
-        if n.is_leaf():
+        if n.is_value():
             buffer += str(n.value)
             if n.index == 0:
                 buffer += ','
@@ -153,7 +153,7 @@ def merge(lhs:Node, rhs:Node):
     return root   
 
 def magnitude(node: Node):
-    if node.is_leaf():
+    if node.is_value():
         return node.value
     if node.is_pair():
         return 3 * node.children[0].value + 2 * node.children[1].value

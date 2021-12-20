@@ -10,7 +10,7 @@ class Vec2:
         return '[{}, {}]'.format(self.x, self.y)
 
     def __repr__(self) -> str:
-        return self.__str__
+        return self.__str__()
     
 class Rect:
     def __init__(self, x, y, width, height) -> None:
@@ -26,7 +26,7 @@ class Rect:
         return '[x = {}, y = {}, w = {}, h = {}]'.format(self.x, self.y, self.width, self.height)
 
     def __repr__(self) -> str:
-        return self.__str__
+        return self.__str__()
     
 # Due to drag, the probe's x velocity changes by 1 toward the value 0; 
 #       that is, it decreases by 1 if it is greater than 0, 

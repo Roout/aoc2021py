@@ -11,7 +11,7 @@ class Line:
         return '(' + str(self.x1) + ',' + str(self.y1) + ') -> (' + str(self.x2) + ',' + str(self.y2) + ')'
 
     def __str__(self) -> str:
-        return '(' + str(self.x1) + ',' + str(self.y1) + ') -> (' + str(self.x2) + ',' + str(self.y2) + ')'
+        return self.__repr__()
 
 def part_1(segments):
     size = 1000
