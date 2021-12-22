@@ -57,14 +57,10 @@ def solve(turn, scores, pos, cache, dices):
     if state in cache:
         return cache[state]
 
-    if scores[0] >= 21:
-        cache[state] = [1, 0]
-        return [1, 0]
+    if scores[turn ^ 1] >= 21:
+        cache[state] = [turn == 1, turn == 0]
+        return [turn == 1, turn == 0]
 
-    if scores[1] >= 21:
-        cache[state] = [0, 1]
-        return [0, 1]
-   
     wins = [0, 0]
     for dice, count in dices.items():
         npos = pos.copy()
