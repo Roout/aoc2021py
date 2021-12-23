@@ -67,7 +67,7 @@ class Cube:
         # slice back-y
         if cube.pos.y + cube.size.y < self.pos.y + self.size.y:
             back_y_cube = Cube(
-                Point(self.pos.x, self.pos.y + cube.size.y, cube.pos.z),
+                Point(self.pos.x, cube.pos.y + cube.size.y, cube.pos.z),
                 Point(self.size.x, self.pos.y + self.size.y - cube.pos.y - cube.size.y, cube.size.z))
             cubes += [back_y_cube]
         # slice front-y
@@ -76,46 +76,48 @@ class Cube:
                 Point(self.pos.x, self.pos.y, cube.pos.z),
                 Point(self.size.x, cube.pos.y - self.pos.y, cube.size.z))
             cubes += [front_y_cube]
-        # slice left-x
-        if cube.pos.x > self.pos.x:
-            left_x_cube = Cube(
-                Point(self.pos.x, cube.pos.y, cube.pos.z),
-                Point(cube.pos.x - self.pos.x, cube.size.y, cube.size.z))
-            cubes += [left_x_cube]
         # slice right-x
         if cube.pos.x + cube.size.x < self.pos.x + self.size.x:
             right_x_cube = Cube(
                 Point(cube.pos.x + cube.size.x, cube.pos.y, cube.pos.z),
                 Point(self.pos.x + self.size.x - cube.pos.x - cube.size.x, cube.size.y, cube.size.z))
             cubes += [right_x_cube]
+        # slice left-x
+        if cube.pos.x > self.pos.x:
+            left_x_cube = Cube(
+                Point(self.pos.x, cube.pos.y, cube.pos.z),
+                Point(cube.pos.x - self.pos.x, cube.size.y, cube.size.z))
+            cubes += [left_x_cube]
         return cubes
 
     def intersect(self, rhs: 'Cube'):
         mn_x = self if self.pos.x <= rhs.pos.x else rhs
         mx_x = self if self.pos.x >  rhs.pos.x else rhs
+        assert mn_x != mx_x
         if mn_x.pos.x + mn_x.size.x <= mx_x.pos.x:
             return None
 
         mn_y = self if self.pos.y <= rhs.pos.y else rhs
         mx_y = self if self.pos.y >  rhs.pos.y else rhs
+        assert mn_y != mx_y
         if mn_y.pos.y + mn_y.size.y <= mx_y.pos.y:
             return None
 
         mn_z = self if self.pos.z <= rhs.pos.z else rhs
         mx_z = self if self.pos.z >  rhs.pos.z else rhs
+        assert mn_z != mx_z
         if mn_z.pos.z + mn_z.size.z <= mx_z.pos.z:
             return None
 
         res_pos = Point(mx_x.pos.x, mx_y.pos.y, mx_z.pos.z) 
         res_size = Point(
             min(mn_x.pos.x + mn_x.size.x - mx_x.pos.x, mx_x.size.x),
-            min(mn_y.pos.y + mn_y.size.y - mx_y.pos.y, mx_x.size.y),
-            min(mn_z.pos.z + mn_z.size.z - mx_z.pos.z, mx_x.size.z)) 
+            min(mn_y.pos.y + mn_y.size.y - mx_y.pos.y, mx_y.size.y),
+            min(mn_z.pos.z + mn_z.size.z - mx_z.pos.z, mx_z.size.z)) 
 
         return Cube(res_pos, res_size)    
 
 def add_lit(lit: List[Cube], cube: Cube):
-    # TODO: can be optimized by not proccessing already intersected sections
     other = [cube]
     while len(other) > 0:
         front = other.pop(0)
@@ -145,20 +147,24 @@ def add_off(lit: List[Cube], off: Cube):
     other = [off]
     # while all `off` cubes not handled!
     while len(other) > 0:
-        # print(other)
         front = other.pop(0)
-        print('proccess:', front)
         new_parts = []
         schedule_for_remove = None
         schedule_for_work = []
         for lit_cube in lit:
             intersection = lit_cube.intersect(front)
             if intersection != None:
-                print('  > intersect with:', lit_cube, '\n  > at:', intersection)
+                # print('intersection:', lit_cube, 'with', front)
+                # print('turn off:', intersection, 'with valume:', intersection.volume())
+                # for x in range(intersection.pos.x, intersection.pos.x + intersection.size.x):
+                #     for y in range(intersection.pos.y, intersection.pos.y + intersection.size.y):
+                #         for z in range(intersection.pos.z, intersection.pos.z + intersection.size.z):
+                #             print('  >', x, y, z)
                 new_parts += lit_cube.split(intersection)
+                # print('new on parts:', lit_cube.split(intersection))
                 schedule_for_remove = lit_cube
                 schedule_for_work = front.split(intersection)   
-                print('  > schedule_for_work:', schedule_for_work)
+                # print('new off parts:', schedule_for_work)
                 break
 
         if schedule_for_remove != None:
@@ -171,14 +177,20 @@ def add_off(lit: List[Cube], off: Cube):
 def part_1(actions: List[str], cubes: List[Cube]):
     lit = [cubes.pop(0)]
     actions.pop(0)
+
+    bounds = Cube(Point(-50,-50,-50), Point(101,101,101))
+
     for cube in cubes:
         a = actions.pop(0)
+        intersection = bounds.intersect(cube)
+        # print(intersection)
+        if intersection == None: 
+            continue
         if a == 'on':
-            # print('add {} to {}'.format(cube, lit))
-            lit = add_lit(lit, cube)
+            lit = add_lit(lit, intersection)
         else:
-            print('add off:', cube)
-            lit = add_off(lit, cube)
+            lit = add_off(lit, intersection)
+    # print(lit)
     s = 0
     for x in lit:
         s += x.volume()
