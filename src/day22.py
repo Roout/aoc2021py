@@ -43,6 +43,9 @@ class Cube:
     def __repr__(self) -> str:
         return self.__str__()
 
+    def copy(self):
+        return Cube(self.pos.copy(), self.size.copy())
+
     def volume(self) -> int:
         return self.size.x * self.size.y * self.size.z
     
@@ -197,7 +200,18 @@ def part_1(actions: List[str], cubes: List[Cube]):
     return s    
 
 def part_2(actions: List[str], cubes: List[Cube]):
-    pass
+    lit = [cubes.pop(0)]
+    actions.pop(0)
+    for cube in cubes:
+        a = actions.pop(0)
+        if a == 'on':
+            lit = add_lit(lit, cube)
+        else:
+            lit = add_off(lit, cube)
+    s = 0
+    for x in lit:
+        s += x.volume()
+    return s    
 
 cubes: List[Cube] = []
 actions: List[str] = []
@@ -219,6 +233,8 @@ with open("../input/day22.txt") as istream:
         cubes += [Cube(a, add(sub(b, a), Point(1, 1, 1)))]
     
 begin = time.time()
-print('Part_1: {}, takes {}s'.format(part_1(actions, cubes), time.time() - begin))
+# expect around 2s
+print('Part_1: {}, takes {}s'.format(part_1(actions.copy(), [x.copy() for x in cubes]), time.time() - begin))
 begin = time.time()
+# expect around 710s as the search is not optimized
 print('Part_2: {}, takes {}s'.format(part_2(actions, cubes), time.time() - begin))
