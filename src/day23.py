@@ -1,7 +1,14 @@
+import abc
 from dataclasses import dataclass, field
 from heapq import heappop, heappush
 import time
 from typing import Dict, List, Set, Tuple
+
+def assign_or_modify(d: dict, key, value):
+    if key not in d:
+        d[key] = value
+    else:
+        d[key] += value
 
 class Amphipod:
     cost = { 'A': 1, 'B': 10, 'C': 100, 'D': 1000 }
@@ -53,46 +60,48 @@ class State:
                 break
         return State(amphipods)
 
-def assign_or_modify(d: dict, key, value):
-    if key not in d:
-        d[key] = value
-    else:
-        d[key] += value
-
 @dataclass(order = True)
 class Move:
     score: int
-    state: State = field(compare=False)
+    state: State = field(compare = False)
 
-
-class Map:
+class Map(metaclass = abc.ABCMeta):
     SHIFTS = [(0, 1), (1, 0), (-1, 0), (0, -1)]
+    ENTRANCE = [(3,1), (5,1), (7,1), (9,1)]
 
     def __init__(self, map: List[str]) -> None:
-        self.score = 30000
         self.map = map
-        self.rooms = {
-            'A': [(3,2), (3,3)],
-            'B': [(5,2), (5,3)],
-            'C': [(7,2), (7,3)],
-            'D': [(9,2), (9,3)]}
+        self.rooms: Dict[str, List[Tuple]] = self._define_rooms()
+        self.initial_state: State = self._define_initial_state()
+        self.final_state: State = self._define_final_state()
 
-        dst_1 = []
+    def _define_initial_state(self):
+        amphipods = []
+        for y in range(len(self.map)):
+            for x in range(len(self.map[0])):
+                if self.map[y][x] != '.' and self.map[y][x] != '#':
+                    amphipods.append(Amphipod(self.map[y][x], (x, y)))
+        return State(amphipods)
+
+    def _define_final_state(self) -> State:
+        dst = []
         for key, values in self.rooms.items():
             for v in values:
-                dst_1.append(Amphipod(key, v))
-        self.final_1 = State(dst_1)
-        self.entrance = [(3,1), (5,1), (7,1), (9,1)]
-        amphipods = []
-        for y in range(len(map)):
-            for x in range(len(map[0])):
-                if map[y][x] != '.' and map[y][x] != '#':
-                    amphipods.append(Amphipod(map[y][x], (x, y)))
-        self.initial_state = State(amphipods)
-                
-    def completed_1(self, state: State):
-        return state.hash == self.final_1.hash
+                dst.append(Amphipod(key, v))
+        return State(dst)
 
+    @abc.abstractmethod
+    def _define_rooms(self) -> Dict[str, List[Tuple]]:
+        pass
+    
+    @abc.abstractmethod
+    def allowed_moves(self, amph: Amphipod, state: State) -> List[Tuple]:
+        pass
+
+
+    def is_final(self, state: State) -> bool:
+        return state.hash == self.final_state.hash
+    
     def occupied_by(self, pos: Tuple, state: State):
         if self.map[pos[1]][pos[0]] == '#':
             return None
@@ -100,7 +109,7 @@ class Map:
             if amph.pos == pos:
                 return amph
         return None
-    
+
     def dump_state(self, state: State):
         img = []
         for row in self.map:
@@ -111,9 +120,8 @@ class Map:
             img[amph.pos[1]][amph.pos[0]] = amph.name[0]
         for row in img:
             print(''.join(row))
-
-
-    def dfs(self, src: tuple, dst: tuple, state: State):
+        
+    def distance(self, src: tuple, dst: tuple, state: State):
         vis = set()
         vis.add(src)
         que = [(src, 0)]
@@ -130,9 +138,47 @@ class Map:
                     vis.add(next)
                     que.append((next, length + 1))
         return None
+    
+    def search(self):
+        opened = []
+        initial = self.initial_state
+        heappush(opened, Move(0, initial))
+        vis = {
+            initial.hash: 0 # state - score
+        }
 
+        while len(opened) > 0:
+            top = heappop(opened)
+            score = top.score
+            state = top.state
+            
+            if self.is_final(state):
+                return score
 
-    def allowed_moves(self, amph: Amphipod, state: State):
+            for amph in state.amphipods:
+                if amph.moved >= 2:
+                    continue
+                for (length, dst) in self.allowed_moves(amph, state):
+                    cost = length * amph.cost
+                    next_state = state.get_next(amph, dst)
+                    if (next_state.hash not in vis 
+                        or vis[next_state.hash] > score + cost
+                    ):
+                        assign_or_modify(vis, next_state.hash, score + cost)
+                        heappush(opened, Move(score + cost, next_state))
+        return None
+    
+class MapPart_1(Map):
+
+    def _define_rooms(self) -> Dict[str, List[Tuple]]:
+        rooms = {
+            'A': [(3,2), (3,3)],
+            'B': [(5,2), (5,3)],
+            'C': [(7,2), (7,3)],
+            'D': [(9,2), (9,3)] }
+        return rooms
+    
+    def allowed_moves(self, amph: Amphipod, state: State) -> List[Tuple]:
         allowed: List[Tuple] = []
         rooms = self.rooms[amph.name]
         rooms_count = len(rooms)
@@ -152,8 +198,8 @@ class Map:
             # otherwise add to hall
             for x in range(1, len(self.map[0]) - 1):
                 dst = (x, 1)
-                if dst not in self.entrance:
-                    length = self.dfs(amph.pos, dst, state)
+                if dst not in Map.ENTRANCE:
+                    length = self.distance(amph.pos, dst, state)
                     if length is not None:
                         allowed.append((length, dst))
 
@@ -165,55 +211,96 @@ class Map:
         other = self.occupied_by(rooms[1], state)
         if other is None:
             for i in range(2):
-                length = self.dfs(amph.pos, rooms[i], state)
+                length = self.distance(amph.pos, rooms[i], state)
                 if length != None:
                     allowed.append((length, rooms[i]))
         elif other.name == amph.name:
-            length = self.dfs(amph.pos, rooms[0], state)
+            length = self.distance(amph.pos, rooms[0], state)
             if length != None:
                 allowed.append((length, rooms[0]))
         return allowed
 
-    def search(self):
-        opened = []
-        initial = self.initial_state
-        heappush(opened, Move(0, initial))
-        vis = {
-            initial.hash: 0 # state - score
-        }
+class MapPart_2(Map):
 
-        while len(opened) > 0:
-            top = heappop(opened)
-            score = top.score
-            state = top.state
-            if len(opened) % 30000 == 0:
-                print(len(vis), len(opened), score)
-                self.dump_state(state)
-            
-            if self.completed_1(state):
-                return score
+    def _define_rooms(self) -> Dict[str, List[Tuple]]:
+        rooms = {
+            'A': [(3,2), (3,3), (3,4), (3,5)],
+            'B': [(5,2), (5,3), (5,4), (5,5)],
+            'C': [(7,2), (7,3), (7,4), (7,5)],
+            'D': [(9,2), (9,3), (9,4), (9,5)] }
+        return rooms
 
-            for amph in state.amphipods:
-                if amph.moved >= 2:
-                    continue
-                for (length, dst) in self.allowed_moves(amph, state):
-                    cost = length * amph.cost
-                    if score + cost > 18500:
-                        continue
-                    next_state = state.get_next(amph, dst)
-                    if (next_state.hash not in vis 
-                        or vis[next_state.hash] > score + cost
-                    ):
-                        assign_or_modify(vis, next_state.hash, score + cost)
-                        heappush(opened, Move(score + cost, next_state))
-        return None
+    def allowed_moves(self, amph: Amphipod, state: State) -> List[Tuple]:
+        allowed: List[Tuple] = []
+        rooms = self.rooms[amph.name]
+        rooms_count = len(rooms)
+        assert rooms_count == 4
+
+        if amph.pos[1] != 1: 
+            # in room
+            # do I even need to move? 
+            at_room = None
+            for i in range(rooms_count):
+                if rooms[i] == amph.pos:
+                    at_room = i
+                    break
+            if at_room != None:
+                # already at one of possible destination
+                need_to_move = False
+                for i in range(at_room + 1, rooms_count):
+                    occupant = self.occupied_by(rooms[i], state) 
+                    if occupant == None or occupant.name != amph.name:
+                        need_to_move = True
+                        break
+                if need_to_move == False:
+                    # no need to move, already at it's place
+                    return allowed
+            # otherwise add to hall
+            for x in range(1, len(self.map[0]) - 1):
+                dst = (x, 1)
+                if dst not in Map.ENTRANCE:
+                    length = self.distance(amph.pos, dst, state)
+                    if length is not None:
+                        allowed.append((length, dst))
+        else:
+            # from hall to room
+            length = self.distance(amph.pos, rooms[0], state)
+            if length == None:
+                # can't reach room
+                return []
+            first_occupied_room_index = None
+            for i in range(1, rooms_count):
+                occupant = self.occupied_by(rooms[i], state)
+                if occupant != None and occupant.name != amph.name:
+                    return []
+                if occupant != None:
+                    first_occupied_room_index = i
+                    break
+            if first_occupied_room_index != None:
+                # confirm that there is no other occupant with other name 
+                # or free space
+                for i in range(first_occupied_room_index + 1, rooms_count):
+                    occupant = self.occupied_by(rooms[i], state)
+                    if occupant == None or occupant.name != amph.name:
+                        return []
+            else:
+                first_occupied_room_index = rooms_count
+            # add empty rooms
+            for i in range(first_occupied_room_index):
+                allowed.append((length + i, rooms[i]))
+        return allowed
 
 def part_1(raw):
-    map = Map(raw)
-    return map.search()
+    # convert part 2 input to part 1 inpot
+    map: List[str] = []
+    for i in range(len(raw)):
+        if i == 3 or i == 4:
+            continue
+        map.append(raw[i])
+    return MapPart_1(map).search()
 
 def part_2(raw):
-    pass
+    return MapPart_2(raw).search()
 
 raw = []
 with open("../input/day23.txt") as istream:
@@ -224,4 +311,5 @@ begin = time.time()
 # takes 280.8341495990753s
 print('Part_1: {}, takes {}s'.format(part_1(raw), time.time() - begin))
 begin = time.time()
+# takes 141.15754175186157s
 print('Part_2: {}, takes {}s'.format(part_2(raw), time.time() - begin))
